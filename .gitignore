@@ -1,0 +1,20 @@
+# Secrets
+.env
+.env.local
+mcp_config.json
+*.pem
+*.key
+
+# Dependencies
+node_modules/
+.pnpm-store
+
+# Build
+dist/
+build/
+.next/
+artifacts/
+
+# System
+.DS_Store
+Thumbs.db
