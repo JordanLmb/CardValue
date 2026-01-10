@@ -21,8 +21,9 @@ This workflow orchestrates the "Failproof Loop" across multiple roles with Contr
 
 ## 3. Frontend (Execute UI)
 - [ ] **Check Rule**: Confirm `agy/rules.md` requires 21st.dev Magic MCP.
+- [ ] **Search**: Check the **21st.dev Library** first for existing components (Cost: 0).
 - [ ] **Mock**: Use the *Contract* to create a mock data object.
-- [ ] **Generate**: Use Magic MCP to generate the UI component.
+- [ ] **Generate**: Use Magic MCP to generate/adapt the UI (Cost: 1).
 - [ ] **Iterate**: Refine with Magic MCP until visual requirements are met.
 
 ## 4. Backend (Execute Logic)
