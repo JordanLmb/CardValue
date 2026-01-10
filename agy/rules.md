@@ -9,9 +9,8 @@ Every action must strictly follow this sequence:
 
 ## 2. The 21st.dev Protocol
 **MUST** use the `21st.dev` Magic MCP tool for all UI component generation.
-- Do not manually write complex UI CSS/HTML scratch unless fixing a minor bug.
+- Don't manually write complex UI CSS/HTML scratch unless fixing a minor bug.
 - Ask the Magic MCP to generate the component based on requirements.
-- **The Rule of 5**: For any new significant UI feature, MUST generate 5 distinct stylistic variations (e.g., Minimal, Bold, Glass, etc.).
 
 ## 3. Contract Integrity Rule
 Before implementing full logic, the API Contract (types/interfaces) **MUST** be defined and locked.
