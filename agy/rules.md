@@ -24,10 +24,13 @@ Before implementing full logic, the API Contract (types/interfaces) **MUST** be 
 - Backend must implement the contract.
 - Any change to the contract after coding starts requires a formal "Refactor Plan".
 
-## 4. The Security Ironclad Rule
-- **Secrets Management**: NEVER commit API keys, passwords, or secrets to git. Use `.env` files.
-- **Input Validation**: ALL API inputs must be validated (Zod/Yup) before processing.
-- **Dependency Audit**: Run `npm audit` before shipping any new feature.
+## 4. The Security First Protocol (OWASP)
+**Non-Negotiable**:
+- **Input Validation**: ALL API inputs must be validated and sanitized (e.g., `zod` for TS). Never trust user input.
+- **AuthN/AuthZ**: Use established providers (Supabase Auth/Clerk). Never roll your own crypto. Follow "Least Privilege".
+- **Secrets**: NEVER commit .env files. Hash sensitive data at rest.
+- **Secure Data**: Enforce HTTPS. No sensitive data in logs (Generic error messages only).
+- **Dependency Audit**: Run `npm audit` before shipping features.
 
 ## 5. The Cross-Platform Persistence Rule
 *Learned from Session 1 (Shell Failures)*

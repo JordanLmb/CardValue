@@ -27,7 +27,7 @@ This workflow orchestrates the "Failproof Loop" across multiple roles with Contr
 - [ ] **Iterate**: Refine with Magic MCP until visual requirements are met.
 
 ## 4. Backend (Execute Logic)
-- [ ] **Implement**: Write the API logic to satisfy the *Contract*.
+- [ ] **Implement**: Write API logic. **MUST** use `zod` validation and follow Security Protocol (Auth/Logs).
 - [ ] **Pass Shadow Test**: Run the test from Step 2 until it passes (Green state).
 - [ ] **Connect**: Wire the real API to the Frontend.
 
