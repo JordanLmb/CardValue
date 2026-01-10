@@ -1,0 +1,50 @@
+{
+    "mcpServers": {
+        "magic": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "@21st-dev/magic-mcp-server"
+            ],
+            "env": {
+                "TWENTYFIRST_DEV_API_KEY": "YOUR_21ST_DEV_API_KEY_HERE"
+            }
+        },
+        "github": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "@modelcontextprotocol/server-github"
+            ],
+            "env": {
+                "GITHUB_PERSONAL_ACCESS_TOKEN": "YOUR_GITHUB_TOKEN_HERE"
+            }
+        },
+        "postgres": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "mcp-server-postgres"
+            ],
+            "env": {
+                "DATABASE_URL": "postgresql://user:password@localhost:5432/your_database"
+            }
+        },
+        "jest": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "mcp-server-jest"
+            ]
+        },
+        "context7": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "@upstash/context7-mcp",
+                "--api-key",
+                "<replace-with-your-Context7-API-Key>"
+            ]
+        }
+    }
+}
