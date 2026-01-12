@@ -44,6 +44,7 @@ YOU MUST optimize the use of the 21st.dev Magic MCP according to these rules:
 At the start of the **PLAN** phase for any task involving UI, YOU MUST present the user with a clear choice:
 1.  **Cost-Effective Path:** Prioritize free resources and minimal generations.
 2.  **Full-Generation Path:** Generate the complete UI in dedicated commands.
+3.  **Use Existing UI:** The user will provide an exact, pre-generated Magic MCP prompt and expects you to implement that specific output.
 YOU CANNOT proceed with UI planning until the user selects a path.
 
 ### 7.2 The Thrifty Rules (If Cost-Effective Path is chosen)
@@ -51,3 +52,10 @@ If the user selects "Cost-Effective Path," YOU MUST strictly follow:
 1.  **INSPIRATION FIRST (Free):** BEFORE generating anything, search the 21st.dev **Inspirations** library for matching components. If a component matches ≥80% of requirements, you MUST use and adapt it via code edits.
 2.  **LOGIC SEPARATION:** Use the Magic MCP **only** for Visual/React component structure and styling. You MUST write all backend logic, state management, and business rules using standard coding.
 3.  **BATCHING:** Group related UI elements (e.g., an entire Dashboard layout) into a SINGLE generation request. You MUST NOT generate "Sidebar", "Header", and "Card" separately.
+
+### 7.3 The Implementation Rules (If Use Existing UI Path is chosen)
+If the user selects "Use Existing UI," YOU MUST strictly follow:
+1.  **NO SEARCH, NO GENERATE:** You MUST NOT search the Inspirations library. You MUST NOT use the Magic MCP to generate new components. This path has a **GENERATION COST OF ZERO**.
+2.  **USER PROVIDES PROMPT:** The user will provide the exact prompt used to generate the UI. You MUST request this prompt if not given.
+3.  **IMPLEMENT EXACTLY:** Your ONLY task is to implement the code that the provided Magic MCP prompt would have generated. You must adapt it to fit the current project's data contract and file structure, but you MUST preserve the core visual design, components, and layout specified in the prompt.
+4.  **EFFICIENCY FOCUS:** All effort is directed at integration and wiring. The creative UI work is considered complete.
