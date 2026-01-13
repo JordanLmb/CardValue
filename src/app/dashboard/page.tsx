@@ -1,26 +1,12 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Upload } from "lucide-react";
+import { Upload, RefreshCw } from "lucide-react";
 import { HoloTable } from "@/components/ui/holo-table";
 import { ValueChart } from "@/components/ui/value-chart";
 import { RarityDonut } from "@/components/ui/rarity-donut";
 import { Card, RARITY_COLORS, CardRarity, UploadResponse } from "@/../contracts/card";
-
-/**
- * Mock data for initial display
- */
-const MOCK_CARDS: Card[] = [
-    { id: "1", name: "Black Lotus", set: "Alpha", condition: "NM", rarity: "Mythic", estimatedValue: 50000, quantity: 1, dateAdded: new Date() },
-    { id: "2", name: "Charizard", set: "Base Set", condition: "LP", rarity: "Rare", estimatedValue: 400, quantity: 2, dateAdded: new Date() },
-    { id: "3", name: "Pikachu", set: "Jungle", condition: "NM", rarity: "Common", estimatedValue: 15, quantity: 4, dateAdded: new Date() },
-    { id: "4", name: "Dark Magician", set: "LOB", condition: "MP", rarity: "Secret", estimatedValue: 120, quantity: 1, dateAdded: new Date() },
-    { id: "5", name: "Blue-Eyes White Dragon", set: "LOB", condition: "NM", rarity: "Secret", estimatedValue: 500, quantity: 1, dateAdded: new Date() },
-    { id: "6", name: "Mox Sapphire", set: "Beta", condition: "LP", rarity: "Mythic", estimatedValue: 8000, quantity: 1, dateAdded: new Date() },
-    { id: "7", name: "Blastoise", set: "Base Set", condition: "HP", rarity: "Rare", estimatedValue: 80, quantity: 1, dateAdded: new Date() },
-    { id: "8", name: "Venusaur", set: "Base Set", condition: "NM", rarity: "Rare", estimatedValue: 150, quantity: 1, dateAdded: new Date() },
-];
 
 const MOCK_VALUE_HISTORY = [
     { date: "Jan", value: 45000 },
@@ -32,9 +18,43 @@ const MOCK_VALUE_HISTORY = [
 ];
 
 export default function DashboardPage() {
-    const [cards, setCards] = useState<Card[]>(MOCK_CARDS);
+    const [cards, setCards] = useState<Card[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
     const [isUploading, setIsUploading] = useState(false);
     const [uploadError, setUploadError] = useState<string | null>(null);
+    const [dataSource, setDataSource] = useState<string>("loading");
+
+    // Fetch cards from Supabase on mount
+    useEffect(() => {
+        fetchCards();
+    }, []);
+
+    const fetchCards = async () => {
+        setIsLoading(true);
+        try {
+            const response = await fetch("/api/cards");
+            const data = await response.json();
+
+            if (data.cards && data.cards.length > 0) {
+                // Convert date strings back to Date objects
+                const cardsWithDates = data.cards.map((card: Card) => ({
+                    ...card,
+                    dateAdded: new Date(card.dateAdded),
+                }));
+                setCards(cardsWithDates);
+                setDataSource(data.source);
+            } else {
+                setCards([]);
+                setDataSource(data.source || "empty");
+            }
+        } catch (error) {
+            console.error("Failed to fetch cards:", error);
+            setCards([]);
+            setDataSource("error");
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     // Calculate rarity distribution
     const rarityDistribution = Object.entries(RARITY_COLORS).map(([rarity, color]) => ({
@@ -66,7 +86,8 @@ export default function DashboardPage() {
             const result: UploadResponse = await response.json();
 
             if (result.success && result.cards) {
-                setCards(prev => [...prev, ...result.cards!]);
+                // Refresh from Supabase to get persisted data
+                await fetchCards();
             } else if (result.errors && result.errors.length > 0) {
                 setUploadError(`Failed to parse ${result.totalErrors} rows: ${result.errors[0].message}`);
             }
@@ -91,30 +112,55 @@ export default function DashboardPage() {
                 >
                     <div>
                         <h1 className="text-4xl font-bold text-white mb-2">CardValue Dashboard</h1>
-                        <p className="text-purple-300">TCG Collection Visualizer</p>
+                        <p className="text-purple-300 flex items-center gap-2">
+                            TCG Collection Visualizer
+                            {dataSource === "supabase" && (
+                                <span className="text-xs bg-green-500/20 text-green-300 px-2 py-0.5 rounded-full">
+                                    🔗 Supabase
+                                </span>
+                            )}
+                            {dataSource === "empty" && (
+                                <span className="text-xs bg-yellow-500/20 text-yellow-300 px-2 py-0.5 rounded-full">
+                                    No cards yet
+                                </span>
+                            )}
+                        </p>
                     </div>
 
-                    {/* Upload Button */}
-                    <label className="relative cursor-pointer">
-                        <input
-                            type="file"
-                            accept=".csv"
-                            onChange={handleUpload}
-                            className="hidden"
-                            disabled={isUploading}
-                        />
-                        <motion.div
+                    <div className="flex items-center gap-3">
+                        {/* Refresh Button */}
+                        <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
-                            className={`flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all ${isUploading
+                            onClick={fetchCards}
+                            disabled={isLoading}
+                            className="flex items-center gap-2 px-4 py-3 rounded-xl font-medium bg-white/10 hover:bg-white/20 text-white transition-all border border-white/20"
+                        >
+                            <RefreshCw className={`h-5 w-5 ${isLoading ? "animate-spin" : ""}`} />
+                        </motion.button>
+
+                        {/* Upload Button */}
+                        <label className="relative cursor-pointer">
+                            <input
+                                type="file"
+                                accept=".csv"
+                                onChange={handleUpload}
+                                className="hidden"
+                                disabled={isUploading}
+                            />
+                            <motion.div
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                className={`flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all ${isUploading
                                     ? "bg-purple-600/50 text-purple-200 cursor-wait"
                                     : "bg-purple-600 hover:bg-purple-500 text-white"
-                                }`}
-                        >
-                            <Upload className="h-5 w-5" />
-                            {isUploading ? "Uploading..." : "Upload CSV"}
-                        </motion.div>
-                    </label>
+                                    }`}
+                            >
+                                <Upload className="h-5 w-5" />
+                                {isUploading ? "Uploading..." : "Upload CSV"}
+                            </motion.div>
+                        </label>
+                    </div>
                 </motion.div>
 
                 {/* Error Message */}
