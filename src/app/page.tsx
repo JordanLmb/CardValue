@@ -24,7 +24,7 @@ export default function Home() {
         {[
           { icon: "📊", title: "Value Tracking", desc: "Monitor collection worth" },
           { icon: "📈", title: "Trend Analysis", desc: "See value over time" },
-          { icon: "🎴", title: "Rarity Breakdown", desc: "Visual distribution" },
+          { icon: "🎴", title: "TCG Distribution", desc: "Visual breakdown by game" },
         ].map((feature) => (
           <div
             key={feature.title}

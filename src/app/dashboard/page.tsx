@@ -23,7 +23,7 @@ export default function DashboardPage() {
     const fetchCards = async () => {
         setIsLoading(true);
         try {
-            const response = await fetch("/api/cards");
+            const response = await fetch("/CardValue/api/cards");
             const data = await response.json();
 
             if (data.cards && data.cards.length > 0) {
@@ -74,7 +74,7 @@ export default function DashboardPage() {
     // Card handlers
     const handleDelete = async (id: string) => {
         try {
-            const response = await fetch(`/api/cards/${id}`, { method: "DELETE" });
+            const response = await fetch(`/CardValue/api/cards/${id}`, { method: "DELETE" });
             if (response.ok) {
                 setCards(prev => prev.filter(c => c.id !== id));
             }
@@ -85,7 +85,7 @@ export default function DashboardPage() {
 
     const handleUpdate = async (id: string, updates: Partial<CardData>) => {
         try {
-            const response = await fetch(`/api/cards/${id}`, {
+            const response = await fetch(`/CardValue/api/cards/${id}`, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(updates),
@@ -109,7 +109,7 @@ export default function DashboardPage() {
         try {
             const formData = new FormData();
             formData.append("file", file);
-            const response = await fetch("/api/upload", { method: "POST", body: formData });
+            const response = await fetch("/CardValue/api/upload", { method: "POST", body: formData });
             const result: UploadResponse = await response.json();
 
             if (result.success && result.cards) {
