@@ -1,36 +1,62 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CardValue - TCG Collection Visualizer
+
+A beautiful dashboard for tracking and visualizing your Trading Card Game collection values across Pokemon, Magic: The Gathering, and Yu-Gi-Oh.
+
+![Dashboard Screenshot](https://raw.githubusercontent.com/JordanLmb/CardValue/main/.github/dashboard.png)
+
+## Features
+
+- **📊 Collection Analytics** - Track total value, card counts, and value history over time
+- **🎮 Multi-TCG Support** - Pokemon, Magic: The Gathering, Yu-Gi-Oh, and more
+- **📥 CSV Import** - Bulk upload your collection with automatic duplicate merging
+- **✏️ Inline Editing** - Edit card details directly in the table
+- **🔍 Search & Filter** - Find cards by name, TCG, or condition
+- **📈 Beautiful Charts** - Animated donut chart and value line chart
+- **☁️ Cloud Sync** - Supabase integration for data persistence
+
+## Tech Stack
+
+- **Frontend**: Next.js 16, React, TypeScript
+- **Styling**: TailwindCSS, Framer Motion
+- **Charts**: Recharts, Custom DonutChart
+- **Backend**: Next.js API Routes
+- **Database**: Supabase (PostgreSQL)
+- **Validation**: Zod
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
+# Install dependencies
+npm install
+
+# Set up environment variables
+cp .env.example .env.local
+# Add your Supabase credentials to .env.local
+
+# Run development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Environment Variables
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## CSV Format
 
-## Learn More
+Upload cards using this format:
 
-To learn more about Next.js, take a look at the following resources:
+```csv
+name,set,condition,tcg,estimatedValue,quantity
+Charizard,Base Set,NM,Pokemon,400,1
+Black Lotus,Alpha,LP,Magic,50000,1
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+**Conditions**: NM, LP, MP, HP, DMG  
+**TCGs**: Pokemon, Magic, YuGiOh, Other
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## License
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT
