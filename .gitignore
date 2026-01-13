@@ -44,3 +44,6 @@ next-env.d.ts
 .agent/
 .gemini/
 brain/
+agy/
+VERIFICATION.md
+PORTFOLIO_ROADMAP.md
