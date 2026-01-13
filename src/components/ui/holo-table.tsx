@@ -80,8 +80,8 @@ export function HoloTable({ cards, tcgColors, onDelete, onUpdate }: HoloTablePro
             </CardHeader>
             <CardContent>
                 {/* Search and Filters */}
-                <div className="flex flex-wrap gap-3 mb-4">
-                    <div className="relative flex-1 min-w-[150px]">
+                <div className="flex flex-col md:flex-row gap-3 mb-4">
+                    <div className="relative flex-1">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-purple-300" />
                         <input
                             type="text"
@@ -91,20 +91,22 @@ export function HoloTable({ cards, tcgColors, onDelete, onUpdate }: HoloTablePro
                             className="w-full pl-9 pr-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm placeholder-purple-300/50 focus:outline-none focus:ring-1 focus:ring-purple-500"
                         />
                     </div>
-                    <select
-                        value={tcgFilter}
-                        onChange={e => setTcgFilter(e.target.value as TCG | "All")}
-                        className="px-3 py-2 rounded-lg bg-purple-900/50 border border-white/10 text-white text-sm focus:outline-none focus:ring-1 focus:ring-purple-500"
-                    >
-                        {TCGS.map(t => <option key={t} value={t}>{t === "All" ? "All TCGs" : t}</option>)}
-                    </select>
-                    <select
-                        value={conditionFilter}
-                        onChange={e => setConditionFilter(e.target.value as CardCondition | "All")}
-                        className="px-3 py-2 rounded-lg bg-purple-900/50 border border-white/10 text-white text-sm focus:outline-none focus:ring-1 focus:ring-purple-500"
-                    >
-                        {ALL_CONDITIONS.map(c => <option key={c} value={c}>{c === "All" ? "All Conditions" : c}</option>)}
-                    </select>
+                    <div className="flex gap-3">
+                        <select
+                            value={tcgFilter}
+                            onChange={e => setTcgFilter(e.target.value as TCG | "All")}
+                            className="flex-1 md:flex-none px-3 py-2 rounded-lg bg-purple-900/50 border border-white/10 text-white text-sm focus:outline-none focus:ring-1 focus:ring-purple-500"
+                        >
+                            {TCGS.map(t => <option key={t} value={t}>{t === "All" ? "All TCGs" : t}</option>)}
+                        </select>
+                        <select
+                            value={conditionFilter}
+                            onChange={e => setConditionFilter(e.target.value as CardCondition | "All")}
+                            className="flex-1 md:flex-none px-3 py-2 rounded-lg bg-purple-900/50 border border-white/10 text-white text-sm focus:outline-none focus:ring-1 focus:ring-purple-500"
+                        >
+                            {ALL_CONDITIONS.map(c => <option key={c} value={c}>{c === "All" ? "All Conditions" : c}</option>)}
+                        </select>
+                    </div>
                 </div>
 
                 {/* Desktop Table View */}
