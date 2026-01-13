@@ -71,6 +71,38 @@ export default function DashboardPage() {
         });
     }, [totalValue]);
 
+    // State for carousel
+    const [activeIndex, setActiveIndex] = useState(-1); // -1 = Total, 0+ = TCG indices
+    const [isPaused, setIsPaused] = useState(false);
+
+    // Auto-scroll carousel logic
+    useEffect(() => {
+        if (tcgDistribution.length === 0 || isPaused) return;
+
+        const interval = setInterval(() => {
+            setActiveIndex(prev => {
+                // Cycle: -1 -> 0 -> 1 ... -> length-1 -> -1
+                if (prev >= tcgDistribution.length - 1) return -1;
+                return prev + 1;
+            });
+        }, 2000); // 2 second interval
+
+        return () => clearInterval(interval);
+    }, [tcgDistribution.length, isPaused]);
+
+    // Handle segment click (TCG selection)
+    const handleSegmentClick = (segment: any) => {
+        const index = tcgDistribution.findIndex(s => s.label === segment.label);
+        if (index !== -1) {
+            setActiveIndex(index);
+            setIsPaused(true);
+            // Resume after 5 seconds
+            setTimeout(() => setIsPaused(false), 5000);
+        }
+    };
+
+    const activeSegment = activeIndex === -1 ? null : tcgDistribution[activeIndex];
+
     // Card handlers
     const handleDelete = async (id: string) => {
         try {
@@ -221,10 +253,35 @@ export default function DashboardPage() {
                                         data={tcgDistribution}
                                         size={220}
                                         strokeWidth={25}
+                                        focusedSegment={activeSegment}
+                                        onSegmentClick={handleSegmentClick}
                                         centerContent={
-                                            <div className="text-center">
-                                                <p className="text-2xl font-bold text-white">{totalCards}</p>
-                                                <p className="text-xs text-purple-300">cards</p>
+                                            <div className="relative h-16 w-32 overflow-hidden flex items-center justify-center">
+                                                {/* Animated Swipe Content */}
+                                                {!activeSegment ? (
+                                                    <motion.div
+                                                        key="total"
+                                                        initial={{ x: 50, opacity: 0 }}
+                                                        animate={{ x: 0, opacity: 1 }}
+                                                        exit={{ x: -50, opacity: 0 }}
+                                                        transition={{ duration: 0.4 }}
+                                                        className="absolute text-center"
+                                                    >
+                                                        <p className="text-2xl font-bold text-white">{totalCards}</p>
+                                                        <p className="text-xs text-purple-300">Total Cards</p>
+                                                    </motion.div>
+                                                ) : (
+                                                    // Note: Individual segments are handled by DonutChart's internal rendering based on focusedSegment
+                                                    // We render null here so DonutChart uses its internal display logic for the active segment
+                                                    // OR we could force override it here. 
+                                                    // Given DonutChart logic: it displays 'activeSegment' details if set. 
+                                                    // So if we pass centerContent, it will hide it when hovering/active?
+                                                    // Looking at DonutChart: "hoveredSegment ? (...) : centerContent"
+                                                    // And we made "activeSegment = hovered || focused".
+                                                    // So if focused is set, it renders the "active segment details" block, IGNORING centerContent.
+                                                    // This is perfect. We only need centerContent for the "Default/Total" state.
+                                                    null
+                                                )}
                                             </div>
                                         }
                                     />

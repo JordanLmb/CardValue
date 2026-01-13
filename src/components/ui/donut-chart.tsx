@@ -14,6 +14,8 @@ interface DonutChartProps {
     size?: number;
     strokeWidth?: number;
     centerContent?: React.ReactNode;
+    focusedSegment?: DonutChartSegment | null;
+    onSegmentClick?: (segment: DonutChartSegment) => void;
 }
 
 /**
@@ -25,6 +27,8 @@ export function DonutChart({
     size = 200,
     strokeWidth = 20,
     centerContent,
+    focusedSegment,
+    onSegmentClick,
 }: DonutChartProps) {
     const [hoveredSegment, setHoveredSegment] = useState<DonutChartSegment | null>(null);
 
@@ -32,6 +36,9 @@ export function DonutChart({
     const radius = size / 2 - strokeWidth / 2;
     const circumference = 2 * Math.PI * radius;
     let cumulativePercentage = 0;
+
+    // Active segment is either hovered or externally focused
+    const activeSegment = hoveredSegment || focusedSegment;
 
     return (
         <div
@@ -60,7 +67,7 @@ export function DonutChart({
                     const percentage = (segment.value / totalValue) * 100;
                     const strokeDasharray = `${(percentage / 100) * circumference} ${circumference}`;
                     const strokeDashoffset = (cumulativePercentage / 100) * circumference;
-                    const isActive = hoveredSegment?.label === segment.label;
+                    const isActive = activeSegment?.label === segment.label;
 
                     cumulativePercentage += percentage;
 
@@ -97,6 +104,7 @@ export function DonutChart({
                                 transform: isActive ? 'scale(1.03)' : 'scale(1)',
                             }}
                             onMouseEnter={() => setHoveredSegment(segment)}
+                            onClick={() => onSegmentClick?.(segment)}
                         />
                     );
                 })}
@@ -110,13 +118,13 @@ export function DonutChart({
                         height: size - strokeWidth * 2.5,
                     }}
                 >
-                    {hoveredSegment ? (
+                    {activeSegment ? (
                         <div className="text-center">
-                            <p className="text-lg font-bold" style={{ color: hoveredSegment.color }}>
-                                {hoveredSegment.label}
+                            <p className="text-lg font-bold" style={{ color: activeSegment.color }}>
+                                {activeSegment.label}
                             </p>
                             <p className="text-xs text-purple-200">
-                                {hoveredSegment.value} ({((hoveredSegment.value / totalValue) * 100).toFixed(0)}%)
+                                {activeSegment.value} ({((activeSegment.value / totalValue) * 100).toFixed(0)}%)
                             </p>
                         </div>
                     ) : centerContent}
