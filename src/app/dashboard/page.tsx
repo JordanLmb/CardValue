@@ -2,20 +2,20 @@
 
 import React, { useState, useCallback, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Upload, RefreshCw } from "lucide-react";
+import { Upload } from "lucide-react";
 import { HoloTable } from "@/components/ui/holo-table";
 import { ValueChart } from "@/components/ui/value-chart";
-import { RarityDonut } from "@/components/ui/rarity-donut";
-import { Card, RARITY_COLORS, CardRarity, UploadResponse } from "@/../contracts/card";
+import { DonutChart } from "@/components/ui/donut-chart";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Tilt } from "@/components/ui/tilt";
+import { Card as CardData, TCG_COLORS, TCG, UploadResponse } from "@/../contracts/card";
 
 export default function DashboardPage() {
-    const [cards, setCards] = useState<Card[]>([]);
+    const [cards, setCards] = useState<CardData[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isUploading, setIsUploading] = useState(false);
     const [uploadError, setUploadError] = useState<string | null>(null);
-    const [dataSource, setDataSource] = useState<string>("loading");
 
-    // Fetch cards from Supabase on mount
     useEffect(() => {
         fetchCards();
     }, []);
@@ -27,61 +27,78 @@ export default function DashboardPage() {
             const data = await response.json();
 
             if (data.cards && data.cards.length > 0) {
-                // Convert date strings back to Date objects
-                const cardsWithDates = data.cards.map((card: Card) => ({
+                const cardsWithDates = data.cards.map((card: CardData) => ({
                     ...card,
                     dateAdded: new Date(card.dateAdded),
                 }));
                 setCards(cardsWithDates);
-                setDataSource(data.source);
             } else {
                 setCards([]);
-                setDataSource(data.source || "empty");
             }
         } catch (error) {
             console.error("Failed to fetch cards:", error);
             setCards([]);
-            setDataSource("error");
         } finally {
             setIsLoading(false);
         }
     };
 
-    // Calculate rarity distribution
-    const rarityDistribution = Object.entries(RARITY_COLORS).map(([rarity, color]) => ({
-        rarity: rarity as CardRarity,
-        count: cards.filter(c => c.rarity === rarity).reduce((sum, c) => sum + c.quantity, 0),
-        color,
-    })).filter(item => item.count > 0);
+    // Calculate TCG distribution for DonutChart
+    const tcgDistribution = useMemo(() => {
+        return Object.entries(TCG_COLORS)
+            .map(([tcg, color]) => ({
+                label: tcg,
+                value: cards.filter(c => c.tcg === tcg).reduce((sum, c) => sum + c.quantity, 0),
+                color,
+            }))
+            .filter(item => item.value > 0);
+    }, [cards]);
 
     // Calculate total value
     const totalValue = cards.reduce((sum, card) => sum + (card.estimatedValue * card.quantity), 0);
+    const totalCards = cards.reduce((sum, c) => sum + c.quantity, 0);
 
-    // Generate dynamic value history ending at current total
+    // Dynamic value history
     const valueHistory = useMemo(() => {
-        if (totalValue === 0) {
-            return [{ date: "Now", value: 0 }];
-        }
-
+        if (totalValue === 0) return [{ date: "Now", value: 0 }];
         const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"];
-        const currentMonth = new Date().getMonth();
-
-        // Generate a realistic growth pattern ending at current value
         return months.map((month, index) => {
-            // Simulate ~15% growth over 6 months with some variance
             const progress = (index + 1) / months.length;
-            const baseValue = totalValue * (0.7 + (0.3 * progress)); // Start at 70%, end at 100%
-            const variance = (Math.sin(index * 1.5) * 0.05); // Add some natural variance
+            const baseValue = totalValue * (0.7 + (0.3 * progress));
+            const variance = Math.sin(index * 1.5) * 0.05;
             const value = Math.round(baseValue * (1 + variance));
-
-            return {
-                date: month,
-                value: index === months.length - 1 ? totalValue : value, // Ensure last point is exact
-            };
+            return { date: month, value: index === months.length - 1 ? totalValue : value };
         });
     }, [totalValue]);
 
-    // Handle file upload
+    // Card handlers
+    const handleDelete = async (id: string) => {
+        try {
+            const response = await fetch(`/api/cards/${id}`, { method: "DELETE" });
+            if (response.ok) {
+                setCards(prev => prev.filter(c => c.id !== id));
+            }
+        } catch (error) {
+            console.error("Delete failed:", error);
+        }
+    };
+
+    const handleUpdate = async (id: string, updates: Partial<CardData>) => {
+        try {
+            const response = await fetch(`/api/cards/${id}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(updates),
+            });
+            if (response.ok) {
+                const { card } = await response.json();
+                setCards(prev => prev.map(c => c.id === id ? { ...c, ...card } : c));
+            }
+        } catch (error) {
+            console.error("Update failed:", error);
+        }
+    };
+
     const handleUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (!file) return;
@@ -92,16 +109,10 @@ export default function DashboardPage() {
         try {
             const formData = new FormData();
             formData.append("file", file);
-
-            const response = await fetch("/api/upload", {
-                method: "POST",
-                body: formData,
-            });
-
+            const response = await fetch("/api/upload", { method: "POST", body: formData });
             const result: UploadResponse = await response.json();
 
             if (result.success && result.cards) {
-                // Refresh from Supabase to get persisted data
                 await fetchCards();
             } else if (result.errors && result.errors.length > 0) {
                 setUploadError(`Failed to parse ${result.totalErrors} rows: ${result.errors[0].message}`);
@@ -110,7 +121,6 @@ export default function DashboardPage() {
             setUploadError("Failed to upload file");
         } finally {
             setIsUploading(false);
-            // Reset input
             event.target.value = "";
         }
     }, []);
@@ -127,55 +137,29 @@ export default function DashboardPage() {
                 >
                     <div>
                         <h1 className="text-4xl font-bold text-white mb-2">CardValue Dashboard</h1>
-                        <p className="text-purple-300 flex items-center gap-2">
-                            TCG Collection Visualizer
-                            {dataSource === "supabase" && (
-                                <span className="text-xs bg-green-500/20 text-green-300 px-2 py-0.5 rounded-full">
-                                    🔗 Supabase
-                                </span>
-                            )}
-                            {dataSource === "empty" && (
-                                <span className="text-xs bg-yellow-500/20 text-yellow-300 px-2 py-0.5 rounded-full">
-                                    No cards yet
-                                </span>
-                            )}
-                        </p>
+                        <p className="text-purple-300">TCG Collection Visualizer</p>
                     </div>
 
-                    <div className="flex items-center gap-3">
-                        {/* Refresh Button */}
-                        <motion.button
+                    <label className="relative cursor-pointer">
+                        <input
+                            type="file"
+                            accept=".csv"
+                            onChange={handleUpload}
+                            className="hidden"
+                            disabled={isUploading}
+                        />
+                        <motion.div
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
-                            onClick={fetchCards}
-                            disabled={isLoading}
-                            className="flex items-center gap-2 px-4 py-3 rounded-xl font-medium bg-white/10 hover:bg-white/20 text-white transition-all border border-white/20"
+                            className={`flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all ${isUploading
+                                ? "bg-purple-600/50 text-purple-200 cursor-wait"
+                                : "bg-purple-600 hover:bg-purple-500 text-white"
+                                }`}
                         >
-                            <RefreshCw className={`h-5 w-5 ${isLoading ? "animate-spin" : ""}`} />
-                        </motion.button>
-
-                        {/* Upload Button */}
-                        <label className="relative cursor-pointer">
-                            <input
-                                type="file"
-                                accept=".csv"
-                                onChange={handleUpload}
-                                className="hidden"
-                                disabled={isUploading}
-                            />
-                            <motion.div
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                className={`flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all ${isUploading
-                                    ? "bg-purple-600/50 text-purple-200 cursor-wait"
-                                    : "bg-purple-600 hover:bg-purple-500 text-white"
-                                    }`}
-                            >
-                                <Upload className="h-5 w-5" />
-                                {isUploading ? "Uploading..." : "Upload CSV"}
-                            </motion.div>
-                        </label>
-                    </div>
+                            <Upload className="h-5 w-5" />
+                            {isUploading ? "Uploading..." : "Upload CSV"}
+                        </motion.div>
+                    </label>
                 </motion.div>
 
                 {/* Error Message */}
@@ -183,31 +167,37 @@ export default function DashboardPage() {
                     <motion.div
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="bg-red-500/20 border border-red-500/30 text-red-300 px-4 py-3 rounded-lg"
+                        className="bg-red-500/20 border border-red-500/30 rounded-xl p-4 text-red-300"
                     >
                         {uploadError}
                     </motion.div>
                 )}
 
-                {/* Stats Overview */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Stats Row */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {[
                         { label: "Total Value", value: `$${totalValue.toLocaleString()}`, icon: "💰" },
-                        { label: "Total Cards", value: cards.reduce((s, c) => s + c.quantity, 0).toString(), icon: "🃏" },
+                        { label: "Total Cards", value: totalCards.toString(), icon: "🃏" },
                         { label: "Unique Cards", value: cards.length.toString(), icon: "✨" },
                     ].map((stat, index) => (
                         <motion.div
                             key={stat.label}
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: index * 0.1, duration: 0.4 }}
-                            className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-xl p-6 flex items-center gap-4"
+                            transition={{ delay: index * 0.1, duration: 0.5 }}
                         >
-                            <span className="text-3xl">{stat.icon}</span>
-                            <div>
-                                <p className="text-purple-300 text-sm">{stat.label}</p>
-                                <p className="text-2xl font-bold text-white">{stat.value}</p>
-                            </div>
+                            <motion.div
+                                whileHover={{ scale: 1.02 }}
+                                className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6 shadow-xl"
+                            >
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-purple-300 text-sm">{stat.label}</p>
+                                        <p className="text-3xl font-bold text-white mt-1">{stat.value}</p>
+                                    </div>
+                                    <span className="text-4xl">{stat.icon}</span>
+                                </div>
+                            </motion.div>
                         </motion.div>
                     ))}
                 </div>
@@ -215,11 +205,48 @@ export default function DashboardPage() {
                 {/* Charts Row */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <ValueChart data={valueHistory} />
-                    <RarityDonut data={rarityDistribution} />
+
+                    {/* TCG Distribution using Magic MCP DonutChart */}
+                    <Tilt rotationFactor={8} isRevese springOptions={{ stiffness: 26.7, damping: 4.1, mass: 0.2 }}>
+                        <Card className="bg-white/10 backdrop-blur-xl border-white/20 shadow-2xl h-full">
+                            <CardHeader>
+                                <CardTitle className="text-white flex items-center gap-2">
+                                    <span className="text-2xl">🎮</span>
+                                    TCG Distribution
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="flex justify-center items-center">
+                                {tcgDistribution.length > 0 ? (
+                                    <DonutChart
+                                        data={tcgDistribution}
+                                        size={220}
+                                        strokeWidth={25}
+                                        centerContent={
+                                            <div className="text-center">
+                                                <p className="text-2xl font-bold text-white">{totalCards}</p>
+                                                <p className="text-xs text-purple-300">cards</p>
+                                            </div>
+                                        }
+                                    />
+                                ) : (
+                                    <p className="text-purple-300/60">No cards yet</p>
+                                )}
+                            </CardContent>
+                        </Card>
+                    </Tilt>
                 </div>
 
-                {/* Card Table */}
-                <HoloTable cards={cards} rarityColors={RARITY_COLORS} />
+                {/* Cards Table with built-in search/filter */}
+                {isLoading ? (
+                    <div className="text-center py-12 text-purple-300">Loading...</div>
+                ) : (
+                    <HoloTable
+                        cards={cards}
+                        tcgColors={TCG_COLORS}
+                        onDelete={handleDelete}
+                        onUpdate={handleUpdate}
+                    />
+                )}
             </div>
         </div>
     );

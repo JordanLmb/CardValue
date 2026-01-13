@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import Papa from "papaparse";
 import { CSVRowSchema, UploadResponse, Card } from "@/../contracts/card";
-import { supabase, CardValueInsert } from "@/lib/supabase";
+import { getSupabase, CardValueInsert } from "@/lib/supabase";
 
 /**
  * POST /api/upload - Parse CSV and validate card data
  * Uses Zod for validation per LAW 4 (Security First)
- * Stores cards in Supabase if configured (LAW 7 - Supabase Integration)
+ * Handles duplicates by updating quantity (same name + set + condition)
  */
 export async function POST(request: NextRequest): Promise<NextResponse<UploadResponse>> {
     try {
@@ -48,9 +48,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<UploadRes
 
         // Validate each row against contract
         parseResult.data.forEach((row: unknown, index: number) => {
-            // Normalize field names (handle case variations)
             const normalizedRow = normalizeRow(row as Record<string, unknown>);
-
             const result = CSVRowSchema.safeParse(normalizedRow);
 
             if (result.success) {
@@ -62,38 +60,50 @@ export async function POST(request: NextRequest): Promise<NextResponse<UploadRes
                 cards.push(card);
             } else {
                 errors.push({
-                    row: index + 2, // +2 for header row and 0-indexing
+                    row: index + 2,
                     message: result.error.issues.map(i => `${i.path.join(".")}: ${i.message}`).join("; "),
                 });
             }
         });
 
-        // Store in Supabase if cards were parsed successfully
-        if (cards.length > 0 && process.env.NEXT_PUBLIC_SUPABASE_URL) {
-            try {
-                // Map Card to CardValueInsert (column name differences)
-                const supabaseRows: CardValueInsert[] = cards.map(card => ({
-                    name: card.name,
-                    set_name: card.set,
-                    condition: card.condition,
-                    rarity: card.rarity,
-                    price: card.estimatedValue,
-                    quantity: card.quantity,
-                    date_added: card.dateAdded.toISOString(),
-                }));
+        // Store in Supabase with duplicate handling
+        if (cards.length > 0) {
+            const supabase = getSupabase();
+            if (supabase) {
+                try {
+                    for (const card of cards) {
+                        // Check if card with same name + set + condition exists
+                        const { data: existing } = await supabase
+                            .from("card_values")
+                            .select("id, quantity")
+                            .eq("name", card.name)
+                            .eq("set_name", card.set)
+                            .eq("condition", card.condition)
+                            .single();
 
-                const { error: insertError } = await supabase
-                    .from("card_values")
-                    .insert(supabaseRows);
-
-                if (insertError) {
-                    console.error("Supabase insert error:", insertError);
-                    // Don't fail the request - cards are still validated
-                    // Just log the error and continue
+                        if (existing) {
+                            // Update quantity of existing card
+                            await supabase
+                                .from("card_values")
+                                .update({ quantity: existing.quantity + card.quantity })
+                                .eq("id", existing.id);
+                        } else {
+                            // Insert new card
+                            const newRow: CardValueInsert = {
+                                name: card.name,
+                                set_name: card.set,
+                                condition: card.condition,
+                                tcg: card.tcg,
+                                price: card.estimatedValue,
+                                quantity: card.quantity,
+                                date_added: card.dateAdded.toISOString(),
+                            };
+                            await supabase.from("card_values").insert(newRow);
+                        }
+                    }
+                } catch (dbError) {
+                    console.error("Database error:", dbError);
                 }
-            } catch (dbError) {
-                console.error("Database error:", dbError);
-                // Graceful degradation - continue without storage
             }
         }
 
@@ -125,11 +135,12 @@ function normalizeRow(row: Record<string, unknown>): Record<string, unknown> {
     for (const [key, value] of Object.entries(row)) {
         const lowerKey = key.toLowerCase().trim();
 
-        // Map common variations
         if (lowerKey === "estimatedvalue" || lowerKey === "estimated_value" || lowerKey === "value") {
             normalized.estimatedValue = value;
         } else if (lowerKey === "qty" || lowerKey === "quantity") {
             normalized.quantity = value;
+        } else if (lowerKey === "game" || lowerKey === "tcg") {
+            normalized.tcg = value;
         } else {
             normalized[lowerKey] = value;
         }

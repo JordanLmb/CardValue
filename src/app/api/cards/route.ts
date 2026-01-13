@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSupabase } from "@/lib/supabase";
-import { Card, CardRarity, CardCondition } from "@/../contracts/card";
+import { Card, TCG, CardCondition } from "@/../contracts/card";
 
 /**
  * GET /api/cards - Fetch all cards from Supabase
@@ -10,7 +10,6 @@ export async function GET() {
     const supabase = getSupabase();
 
     if (!supabase) {
-        // Supabase not configured - return empty array
         return NextResponse.json({ cards: [], source: "none" });
     }
 
@@ -31,7 +30,7 @@ export async function GET() {
             name: row.name,
             set: row.set_name,
             condition: row.condition as CardCondition,
-            rarity: row.rarity as CardRarity,
+            tcg: (row.tcg || "Other") as TCG,
             estimatedValue: parseFloat(row.price),
             quantity: row.quantity,
             dateAdded: new Date(row.date_added || row.created_at),

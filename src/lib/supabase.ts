@@ -36,6 +36,9 @@ export const supabase = {
             return {
                 insert: async () => ({ error: new Error("Supabase not configured") }),
                 select: async () => ({ data: null, error: new Error("Supabase not configured") }),
+                update: async () => ({ error: new Error("Supabase not configured") }),
+                delete: async () => ({ error: new Error("Supabase not configured") }),
+                upsert: async () => ({ error: new Error("Supabase not configured") }),
             };
         }
         return client.from(tableName);
@@ -51,7 +54,7 @@ export interface CardValueRow {
     name: string;
     set_name: string;  // Maps to Card.set
     condition: "NM" | "LP" | "MP" | "HP" | "DMG";
-    rarity: string;
+    tcg: "Pokemon" | "Magic" | "YuGiOh" | "Other";
     price: number;     // Maps to Card.estimatedValue
     quantity: number;
     date_added: string;

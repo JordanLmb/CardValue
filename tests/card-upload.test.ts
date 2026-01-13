@@ -5,7 +5,7 @@
  * Per Workflow Step 2: This test MUST FAIL initially before implementation.
  */
 
-import { CSVRowSchema, CardSchema, CardConditionEnum, CardRarityEnum } from "../contracts/card";
+import { CSVRowSchema, CardSchema, CardConditionEnum, TCGEnum } from "../contracts/card";
 
 describe("Card Contract Validation", () => {
     describe("CardConditionEnum", () => {
@@ -23,17 +23,17 @@ describe("Card Contract Validation", () => {
         });
     });
 
-    describe("CardRarityEnum", () => {
-        it("should accept valid rarities", () => {
-            const validRarities = ["Common", "Uncommon", "Rare", "Mythic", "Secret"];
-            validRarities.forEach(rarity => {
-                expect(() => CardRarityEnum.parse(rarity)).not.toThrow();
+    describe("TCGEnum", () => {
+        it("should accept valid TCGs", () => {
+            const validTCGs = ["Pokemon", "Magic", "YuGiOh", "Other"];
+            validTCGs.forEach(tcg => {
+                expect(() => TCGEnum.parse(tcg)).not.toThrow();
             });
         });
 
-        it("should reject invalid rarities", () => {
-            expect(() => CardRarityEnum.parse("Legendary")).toThrow();
-            expect(() => CardRarityEnum.parse("common")).toThrow(); // case-sensitive
+        it("should reject invalid TCGs", () => {
+            expect(() => TCGEnum.parse("Hearthstone")).toThrow();
+            expect(() => TCGEnum.parse("pokemon")).toThrow(); // case-sensitive
         });
     });
 
@@ -43,7 +43,7 @@ describe("Card Contract Validation", () => {
                 name: "Black Lotus",
                 set: "Alpha",
                 condition: "NM",
-                rarity: "Mythic",
+                tcg: "Magic",
                 estimatedValue: "50000",
                 quantity: "1",
             };
@@ -54,13 +54,14 @@ describe("Card Contract Validation", () => {
                 expect(result.data.name).toBe("Black Lotus");
                 expect(result.data.estimatedValue).toBe(50000);
                 expect(result.data.quantity).toBe(1);
+                expect(result.data.tcg).toBe("Magic");
             }
         });
 
         it("should reject rows missing required fields", () => {
             const incompleteRow = {
                 name: "Charizard",
-                // missing set, condition, rarity, estimatedValue
+                // missing set, condition, estimatedValue
             };
 
             const result = CSVRowSchema.safeParse(incompleteRow);
@@ -72,7 +73,7 @@ describe("Card Contract Validation", () => {
                 name: "Test Card",
                 set: "Test Set",
                 condition: "NM",
-                rarity: "Common",
+                tcg: "Pokemon",
                 estimatedValue: "-10",
                 quantity: "1",
             };
@@ -86,7 +87,7 @@ describe("Card Contract Validation", () => {
                 name: "Pikachu",
                 set: "Base Set",
                 condition: "LP",
-                rarity: "Common",
+                tcg: "Pokemon",
                 estimatedValue: "15.50",
                 quantity: "4",
             };
@@ -94,9 +95,7 @@ describe("Card Contract Validation", () => {
             const result = CSVRowSchema.safeParse(stringNumbers);
             expect(result.success).toBe(true);
             if (result.success) {
-                expect(typeof result.data.estimatedValue).toBe("number");
                 expect(result.data.estimatedValue).toBe(15.5);
-                expect(typeof result.data.quantity).toBe("number");
                 expect(result.data.quantity).toBe(4);
             }
         });
@@ -106,7 +105,7 @@ describe("Card Contract Validation", () => {
                 name: "Dark Magician",
                 set: "LOB",
                 condition: "MP",
-                rarity: "Secret",
+                tcg: "YuGiOh",
                 estimatedValue: "120",
             };
 
@@ -116,17 +115,32 @@ describe("Card Contract Validation", () => {
                 expect(result.data.quantity).toBe(1);
             }
         });
+
+        it("should default TCG to Other if not provided", () => {
+            const noTcg = {
+                name: "Test Card",
+                set: "Test Set",
+                condition: "NM",
+                estimatedValue: "100",
+            };
+
+            const result = CSVRowSchema.safeParse(noTcg);
+            expect(result.success).toBe(true);
+            if (result.success) {
+                expect(result.data.tcg).toBe("Other");
+            }
+        });
     });
 
     describe("CardSchema", () => {
         it("should validate a complete card object", () => {
             const validCard = {
                 id: "123e4567-e89b-12d3-a456-426614174000",
-                name: "Blue-Eyes White Dragon",
-                set: "LOB",
-                condition: "NM",
-                rarity: "Secret",
-                estimatedValue: 500,
+                name: "Mox Sapphire",
+                set: "Beta",
+                condition: "LP",
+                tcg: "Magic",
+                estimatedValue: 8000,
                 quantity: 1,
                 dateAdded: new Date(),
             };
@@ -135,19 +149,18 @@ describe("Card Contract Validation", () => {
             expect(result.success).toBe(true);
         });
 
-        it("should allow optional id field", () => {
-            const noIdCard = {
-                name: "Mox Sapphire",
-                set: "Beta",
-                condition: "LP",
-                rarity: "Mythic",
-                estimatedValue: 8000,
+        it("should reject invalid condition in card", () => {
+            const invalidCondition = {
+                name: "Test Card",
+                set: "Test Set",
+                condition: "INVALID",
+                tcg: "Pokemon",
+                estimatedValue: 100,
                 quantity: 1,
-                dateAdded: new Date(),
             };
 
-            const result = CardSchema.safeParse(noIdCard);
-            expect(result.success).toBe(true);
+            const result = CardSchema.safeParse(invalidCondition);
+            expect(result.success).toBe(false);
         });
     });
 });

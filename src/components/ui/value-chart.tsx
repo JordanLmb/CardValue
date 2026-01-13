@@ -65,11 +65,13 @@ export function ValueChart({ data }: ValueChartProps) {
                                 />
                                 <Tooltip
                                     contentStyle={{
-                                        backgroundColor: "rgba(139, 92, 246, 0.9)",
-                                        border: "1px solid rgba(255,255,255,0.2)",
+                                        backgroundColor: "rgba(0, 0, 0, 0.9)",
+                                        border: "1px solid rgba(255,255,255,0.3)",
                                         borderRadius: "8px",
-                                        color: "white"
+                                        color: "white",
+                                        boxShadow: "0 4px 20px rgba(0, 0, 0, 0.5)",
                                     }}
+                                    labelStyle={{ color: "#fff", fontWeight: "bold" }}
                                     formatter={(value) => [`$${(value as number)?.toLocaleString() ?? 0}`, "Value"]}
                                 />
                                 <Line

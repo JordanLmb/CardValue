@@ -110,7 +110,16 @@ export function DonutChart({
                         height: size - strokeWidth * 2.5,
                     }}
                 >
-                    {centerContent}
+                    {hoveredSegment ? (
+                        <div className="text-center">
+                            <p className="text-lg font-bold" style={{ color: hoveredSegment.color }}>
+                                {hoveredSegment.label}
+                            </p>
+                            <p className="text-xs text-purple-200">
+                                {hoveredSegment.value} ({((hoveredSegment.value / totalValue) * 100).toFixed(0)}%)
+                            </p>
+                        </div>
+                    ) : centerContent}
                 </div>
             )}
         </div>

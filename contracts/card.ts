@@ -15,17 +15,16 @@ export const CardConditionEnum = z.enum([
 export type CardCondition = z.infer<typeof CardConditionEnum>;
 
 /**
- * Card Rarity Classification
+ * Trading Card Game Types
  */
-export const CardRarityEnum = z.enum([
-    "Common",
-    "Uncommon",
-    "Rare",
-    "Mythic",
-    "Secret",
+export const TCGEnum = z.enum([
+    "Pokemon",
+    "Magic",
+    "YuGiOh",
+    "Other",
 ]);
 
-export type CardRarity = z.infer<typeof CardRarityEnum>;
+export type TCG = z.infer<typeof TCGEnum>;
 
 /**
  * Core Card Schema - Data Contract (LAW 3)
@@ -36,7 +35,7 @@ export const CardSchema = z.object({
     name: z.string().min(1, "Card name is required"),
     set: z.string().min(1, "Set name is required"),
     condition: CardConditionEnum,
-    rarity: CardRarityEnum,
+    tcg: TCGEnum,
     estimatedValue: z.number().min(0, "Value cannot be negative"),
     quantity: z.number().int().min(1).default(1),
     dateAdded: z.coerce.date().default(() => new Date()),
@@ -51,7 +50,7 @@ export const CSVRowSchema = z.object({
     name: z.string().min(1),
     set: z.string().min(1),
     condition: CardConditionEnum,
-    rarity: CardRarityEnum,
+    tcg: TCGEnum.optional().default("Other"),
     estimatedValue: z.coerce.number().min(0),
     quantity: z.coerce.number().int().min(1).optional().default(1),
 });
@@ -81,16 +80,15 @@ export interface CollectionStats {
     totalValue: number;
     totalCards: number;
     valueHistory: { date: string; value: number }[];
-    rarityDistribution: { rarity: CardRarity; count: number; color: string }[];
+    tcgDistribution: { tcg: TCG; count: number; color: string }[];
 }
 
 /**
- * Rarity Color Map for Void Aesthetic
+ * TCG Color Map for Void Aesthetic
  */
-export const RARITY_COLORS: Record<CardRarity, string> = {
-    Common: "hsl(270 30% 40%)",
-    Uncommon: "hsl(260 50% 55%)",
-    Rare: "hsl(280 70% 60%)",
-    Mythic: "hsl(290 85% 65%)",
-    Secret: "hsl(300 95% 70%)",
+export const TCG_COLORS: Record<TCG, string> = {
+    Pokemon: "hsl(45 90% 55%)",   // Yellow/Gold
+    Magic: "hsl(270 70% 55%)",    // Purple
+    YuGiOh: "hsl(200 80% 50%)",   // Blue
+    Other: "hsl(0 0% 50%)",       // Gray
 };
