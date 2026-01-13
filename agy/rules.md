@@ -66,3 +66,6 @@ The `antigravity-failproof-template` repository is a STARTER TEMPLATE ONLY. YOU 
 2.  **CREATE NEW REPO:** For each new project, create a new GitHub repository using the GitHub MCP.
 3.  **COPY TEMPLATE FILES:** Copy `agy/rules.md`, `VERIFICATION.md`, and `.agent/workflows/` to the new project.
 4.  **UPDATE GIT REMOTE:** Point the local project to the new repository before committing.
+
+## LAW 9: AGENT FILES PROTOCOL
+YOU MUST ensure all agent-related files and directories (specifically `.agent/`, `.gemini/`, `brain/`) are strictly ignored via `.gitignore` and NEVER committed to the repository.
