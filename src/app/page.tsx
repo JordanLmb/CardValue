@@ -20,7 +20,7 @@ export default function Home() {
         </Link>
       </div>
 
-      <div className="mt-16 grid grid-cols-3 gap-6 max-w-2xl">
+      <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-6 max-w-2xl">
         {[
           { icon: "📊", title: "Value Tracking", desc: "Monitor collection worth" },
           { icon: "📈", title: "Trend Analysis", desc: "See value over time" },

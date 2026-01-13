@@ -107,7 +107,8 @@ export function HoloTable({ cards, tcgColors, onDelete, onUpdate }: HoloTablePro
                     </select>
                 </div>
 
-                <div className="overflow-x-auto">
+                {/* Desktop Table View */}
+                <div className="hidden md:block overflow-x-auto">
                     <table className="w-full">
                         <thead>
                             <tr className="border-b border-white/10">
@@ -235,6 +236,155 @@ export function HoloTable({ cards, tcgColors, onDelete, onUpdate }: HoloTablePro
                             })}
                         </tbody>
                     </table>
+                </div>
+
+                {/* Mobile Card View */}
+                <div className="md:hidden space-y-4">
+                    {filteredCards.map((card, index) => {
+                        const isEditing = editingId === card.id;
+
+                        return (
+                            <motion.div
+                                key={card.id || index}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: index * 0.03, duration: 0.2 }}
+                                className="bg-white/5 border border-white/10 rounded-xl p-4 space-y-3"
+                            >
+                                {/* Header: Name & Condition */}
+                                <div className="flex justify-between items-start">
+                                    <div className="flex-1 mr-2">
+                                        {isEditing ? (
+                                            <input
+                                                type="text"
+                                                value={editData.name || ""}
+                                                onChange={e => setEditData({ ...editData, name: e.target.value })}
+                                                className="bg-white/10 border border-white/20 rounded px-2 py-1 text-white w-full text-lg font-medium"
+                                                placeholder="Name"
+                                            />
+                                        ) : (
+                                            <h3 className="text-white font-bold text-lg leading-tight">{card.name}</h3>
+                                        )}
+                                    </div>
+                                    {isEditing ? (
+                                        <select
+                                            value={editData.condition || "NM"}
+                                            onChange={e => setEditData({ ...editData, condition: e.target.value as CardCondition })}
+                                            className="bg-purple-900 border border-white/20 rounded px-2 py-1 text-white text-sm"
+                                        >
+                                            {CONDITIONS.map(c => <option key={c} value={c}>{c}</option>)}
+                                        </select>
+                                    ) : (
+                                        <span className={`px-2 py-1 rounded-full text-xs font-bold border ${CONDITION_COLORS[card.condition]}`}>
+                                            {card.condition}
+                                        </span>
+                                    )}
+                                </div>
+
+                                {/* Details Row: Set & TCG */}
+                                <div className="flex justify-between items-center text-sm">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-purple-300">Set:</span>
+                                        {isEditing ? (
+                                            <input
+                                                type="text"
+                                                value={editData.set || ""}
+                                                onChange={e => setEditData({ ...editData, set: e.target.value })}
+                                                className="bg-white/10 border border-white/20 rounded px-2 py-1 text-white w-32"
+                                            />
+                                        ) : (
+                                            <span className="text-purple-200">{card.set}</span>
+                                        )}
+                                    </div>
+                                    {isEditing ? (
+                                        <select
+                                            value={editData.tcg || "Other"}
+                                            onChange={e => setEditData({ ...editData, tcg: e.target.value as TCG })}
+                                            className="bg-purple-900 border border-white/20 rounded px-2 py-1 text-white text-sm"
+                                        >
+                                            {(["Pokemon", "Magic", "YuGiOh", "Other"] as TCG[]).map(t => <option key={t} value={t}>{t}</option>)}
+                                        </select>
+                                    ) : (
+                                        <span
+                                            className="px-2 py-0.5 rounded text-[10px] font-medium uppercase tracking-wider"
+                                            style={{
+                                                backgroundColor: `${tcgColors[card.tcg]}20`,
+                                                color: tcgColors[card.tcg],
+                                                border: `1px solid ${tcgColors[card.tcg]}40`
+                                            }}
+                                        >
+                                            {card.tcg}
+                                        </span>
+                                    )}
+                                </div>
+
+                                {/* Value Row: Price & Quantity */}
+                                <div className="flex justify-between items-center bg-black/20 rounded-lg p-2">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-purple-300 text-xs uppercase">Est. Value</span>
+                                        {isEditing ? (
+                                            <input
+                                                type="number"
+                                                value={editData.estimatedValue || 0}
+                                                onChange={e => setEditData({ ...editData, estimatedValue: parseFloat(e.target.value) })}
+                                                className="bg-white/10 border border-white/20 rounded px-2 py-1 text-green-400 w-20 text-right font-mono"
+                                            />
+                                        ) : (
+                                            <span className="text-green-400 font-mono font-bold">${card.estimatedValue.toFixed(2)}</span>
+                                        )}
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-purple-300 text-xs uppercase">Qty</span>
+                                        {isEditing ? (
+                                            <input
+                                                type="number"
+                                                value={editData.quantity || 1}
+                                                onChange={e => setEditData({ ...editData, quantity: parseInt(e.target.value) })}
+                                                className="bg-white/10 border border-white/20 rounded px-2 py-1 text-white w-14 text-right"
+                                            />
+                                        ) : (
+                                            <span className="text-white font-bold">x{card.quantity}</span>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Actions Row - Always Visible on Mobile */}
+                                <div className="flex gap-2 pt-2 border-t border-white/5">
+                                    {isEditing ? (
+                                        <>
+                                            <button
+                                                onClick={() => handleSave(card.id!)}
+                                                className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg bg-green-500/20 text-green-300 border border-green-500/30 font-medium active:scale-95 transition-transform"
+                                            >
+                                                <Check className="h-4 w-4" /> Save
+                                            </button>
+                                            <button
+                                                onClick={handleCancel}
+                                                className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg bg-red-500/20 text-red-300 border border-red-500/30 font-medium active:scale-95 transition-transform"
+                                            >
+                                                <X className="h-4 w-4" /> Cancel
+                                            </button>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <button
+                                                onClick={() => handleEdit(card)}
+                                                className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg bg-blue-500/10 text-blue-300 border border-blue-500/20 hover:bg-blue-500/20 font-medium active:scale-95 transition-transform"
+                                            >
+                                                <Pencil className="h-4 w-4" /> Edit
+                                            </button>
+                                            <button
+                                                onClick={() => handleDelete(card.id!)}
+                                                className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg bg-red-500/10 text-red-300 border border-red-500/20 hover:bg-red-500/20 font-medium active:scale-95 transition-transform"
+                                            >
+                                                <Trash2 className="h-4 w-4" /> Delete
+                                            </button>
+                                        </>
+                                    )}
+                                </div>
+                            </motion.div>
+                        );
+                    })}
                 </div>
 
                 {cards.length === 0 && (
