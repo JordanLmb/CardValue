@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface DonutChartSegment {
     value: number;
@@ -118,16 +118,25 @@ export function DonutChart({
                         height: size - strokeWidth * 2.5,
                     }}
                 >
-                    {activeSegment ? (
-                        <div className="text-center">
-                            <p className="text-lg font-bold" style={{ color: activeSegment.color }}>
-                                {activeSegment.label}
-                            </p>
-                            <p className="text-xs text-purple-200">
-                                {activeSegment.value} ({((activeSegment.value / totalValue) * 100).toFixed(0)}%)
-                            </p>
-                        </div>
-                    ) : centerContent}
+                    <AnimatePresence mode="wait">
+                        {activeSegment ? (
+                            <motion.div
+                                key={activeSegment.label}
+                                initial={{ x: 50, opacity: 0 }}
+                                animate={{ x: 0, opacity: 1 }}
+                                exit={{ x: -50, opacity: 0 }}
+                                transition={{ duration: 0.4 }}
+                                className="text-center"
+                            >
+                                <p className="text-lg font-bold" style={{ color: activeSegment.color }}>
+                                    {activeSegment.label}
+                                </p>
+                                <p className="text-xs text-purple-200">
+                                    {activeSegment.value} ({((activeSegment.value / totalValue) * 100).toFixed(0)}%)
+                                </p>
+                            </motion.div>
+                        ) : centerContent}
+                    </AnimatePresence>
                 </div>
             )}
         </div>
