@@ -12,6 +12,7 @@
 - **COMMAND:** Always use `npx.cmd` instead of `npx`.
 - **CHAINING:** Use `cmd /c "command1 && command2"` for command chains.
 - **DELETION:** Use `Remove-Item -Recurse -Force` in PowerShell.
+- **SCRIPT ERRORS:** If you see "running scripts is disabled" errors, wrap npm commands with `cmd /c "npm ..."` to bypass PowerShell restrictions.
 
 ### 2. Next.js Project Setup
 - **DIRECTORY:** Run `create-next-app` in an empty `temp` folder, then move contents to root.

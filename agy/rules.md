@@ -58,4 +58,11 @@ If the user selects "Use Existing UI," YOU MUST strictly follow:
 1.  **NO SEARCH, NO GENERATE:** You MUST NOT search the Inspirations library. You MUST NOT use the Magic MCP to generate new components. This path has a **GENERATION COST OF ZERO**.
 2.  **USER PROVIDES PROMPT:** The user will provide the exact prompt used to generate the UI. You MUST request this prompt if not given.
 3.  **IMPLEMENT EXACTLY:** Your ONLY task is to implement the code that the provided Magic MCP prompt would have generated. You must adapt it to fit the current project's data contract and file structure, but you MUST preserve the core visual design, components, and layout specified in the prompt.
-4.  **EFFICIENCY FOCUS:** All effort is directed at integration and wiring. The creative UI work is considered complete.
+3.  **EFFICIENCY FOCUS:** All effort is directed at integration and wiring. The creative UI work is considered complete.
+
+## LAW 8: TEMPLATE REPOSITORY PROTOCOL
+The `antigravity-failproof-template` repository is a STARTER TEMPLATE ONLY. YOU MUST:
+1.  **NEVER COMMIT PROJECT CODE** to the template repository directly.
+2.  **CREATE NEW REPO:** For each new project, create a new GitHub repository using the GitHub MCP.
+3.  **COPY TEMPLATE FILES:** Copy `agy/rules.md`, `VERIFICATION.md`, and `.agent/workflows/` to the new project.
+4.  **UPDATE GIT REMOTE:** Point the local project to the new repository before committing.
