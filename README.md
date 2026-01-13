@@ -2,7 +2,7 @@
 
 A beautiful dashboard for tracking and visualizing your Trading Card Game collection values across Pokemon, Magic: The Gathering, and Yu-Gi-Oh.
 
-![Dashboard Screenshot](https://raw.githubusercontent.com/JordanLmb/CardValue/main/.github/dashboard.png)
+![Dashboard Screenshot](https://raw.githubusercontent.com/JordanLmb/CardValue/main/public/dashboard.png)
 
 ## Features
 
